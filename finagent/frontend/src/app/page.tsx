@@ -45,7 +45,7 @@ export default function HomePage() {
     const history = [...messages, userMsg].map(m => ({ role: m.role, content: m.content }))
 
     try {
-      const resp = await fetch('http://localhost:8000/api/chat/stream', {
+      const resp = await fetch('https://finagent-production.up.railway.app/api/chat/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: history }),
