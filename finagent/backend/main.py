@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import yfinance as yf
+
 import httpx
 import json
 import os
@@ -12,6 +13,7 @@ from typing import Optional
 import re
 
 app = FastAPI(title="FinAgent API", version="1.0.0")
+yf.set_tz_cache_location("/tmp")
 
 app.add_middleware(
     CORSMiddleware,
@@ -31,7 +33,9 @@ GROQ_MODEL = "llama-3.3-70b-versatile"
 def get_stock_data(ticker: str) -> dict:
     """Fetch real-time stock data from Yahoo Finance."""
     try:
-        stock = yf.Ticker(ticker.upper())
+        session = requests.Session()
+        session.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'})
+        stock = yf.Ticker(ticker.upper(), session=session)
         info = stock.info
         hist = stock.history(period="1mo", interval="1d")
 
