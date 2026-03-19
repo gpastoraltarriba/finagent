@@ -34,41 +34,48 @@ def get_stock_data(ticker: str) -> dict:
     """Fetch real-time stock data from Yahoo Finance."""
     try:
         from curl_cffi import requests as curl_requests
-        session = curl_requests.Session(impersonate="chrome")
-        stock = yf.Ticker(ticker.upper(), session=session)
-        info = stock.info
-        hist = stock.history(period="1mo", interval="1d")
-
+        session = curl_requests.Session(impersonate="chrome110")
+        
+        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker.upper()}?interval=1d&range=1mo"
+        resp = session.get(url, timeout=15)
+        data = resp.json()
+        
+        result = data["chart"]["result"][0]
+        meta = result["meta"]
+        timestamps = result.get("timestamp", [])
+        closes = result["indicators"]["quote"][0].get("close", [])
+        
         price_history = []
-        for date, row in hist.iterrows():
-            price_history.append({
-                "date": date.strftime("%Y-%m-%d"),
-                "close": round(float(row["Close"]), 2),
-                "volume": int(row["Volume"]),
-                "high": round(float(row["High"]), 2),
-                "low": round(float(row["Low"]), 2),
-            })
-
+        for i, ts in enumerate(timestamps):
+            if i < len(closes) and closes[i]:
+                from datetime import datetime
+                price_history.append({
+                    "date": datetime.fromtimestamp(ts).strftime("%Y-%m-%d"),
+                    "close": round(float(closes[i]), 2),
+                    "volume": 0,
+                    "high": round(float(closes[i]), 2),
+                    "low": round(float(closes[i]), 2),
+                })
+        
         return {
             "ticker": ticker.upper(),
-            "name": info.get("longName", ticker),
-            "price": info.get("currentPrice") or info.get("regularMarketPrice"),
-            "change": info.get("regularMarketChange"),
-            "change_pct": info.get("regularMarketChangePercent"),
-            "market_cap": info.get("marketCap"),
-            "pe_ratio": info.get("trailingPE"),
-            "52w_high": info.get("fiftyTwoWeekHigh"),
-            "52w_low": info.get("fiftyTwoWeekLow"),
-            "volume": info.get("regularMarketVolume"),
-            "avg_volume": info.get("averageVolume"),
-            "sector": info.get("sector", "N/A"),
-            "currency": info.get("currency", "USD"),
+            "name": meta.get("longName", meta.get("shortName", ticker)),
+            "price": meta.get("regularMarketPrice"),
+            "change": meta.get("regularMarketPrice", 0) - meta.get("chartPreviousClose", 0),
+            "change_pct": ((meta.get("regularMarketPrice", 0) - meta.get("chartPreviousClose", 0)) / meta.get("chartPreviousClose", 1)) * 100,
+            "market_cap": None,
+            "pe_ratio": None,
+            "52w_high": meta.get("fiftyTwoWeekHigh"),
+            "52w_low": meta.get("fiftyTwoWeekLow"),
+            "volume": meta.get("regularMarketVolume"),
+            "avg_volume": None,
+            "sector": "N/A",
+            "currency": meta.get("currency", "USD"),
             "price_history": price_history,
-            "summary": info.get("longBusinessSummary", "")[:400],
+            "summary": "",
         }
     except Exception as e:
         return {"error": str(e), "ticker": ticker}
-
 
 def get_news(query: str, days: int = 7) -> list:
     """Fetch news from NewsAPI."""
