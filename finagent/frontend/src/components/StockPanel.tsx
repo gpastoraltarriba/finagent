@@ -165,8 +165,8 @@ export default function StockPanel({ stockData }: { stockData: StockData | null 
       <div style={{ padding: '8px 16px 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
         <MetricCard label="Market Cap" value={fmtLarge(stockData.market_cap)} />
         <MetricCard label="P/E Ratio" value={fmt(stockData.pe_ratio, 1)} sub="Trailing" />
-        <MetricCard label="52W High" value={`$${fmt(stockData['52w_high'] as number)}`} />
-        <MetricCard label="52W Low" value={`$${fmt(stockData['52w_low'] as number)}`} />
+        <MetricCard label="52W High" value={`$${fmt((stockData as any)['52w_high'])}`} />
+        <MetricCard label="52W Low" value={`$${fmt((stockData as any)['52w_low'])}`} />
       </div>
 
       {/* Company summary */}
