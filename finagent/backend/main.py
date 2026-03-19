@@ -109,9 +109,15 @@ def get_news(query: str, days: int = 7) -> list:
 def calculate_metrics(ticker: str) -> dict:
     """Calculate technical metrics for a stock."""
     try:
-        stock = yf.Ticker(ticker.upper())
-        hist = stock.history(period="3mo", interval="1d")
-        closes = hist["Close"].tolist()
+        from curl_cffi import requests as curl_requests
+        session = curl_requests.Session(impersonate="chrome110")
+        
+        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker.upper()}?interval=1d&range=3mo"
+        resp = session.get(url, timeout=15)
+        data = resp.json()
+        
+        result = data["chart"]["result"][0]
+        closes = [c for c in result["indicators"]["quote"][0].get("close", []) if c]
 
         if len(closes) < 20:
             return {"error": "Not enough data"}
@@ -120,7 +126,6 @@ def calculate_metrics(ticker: str) -> dict:
         sma_50 = sum(closes[-50:]) / 50 if len(closes) >= 50 else None
         volatility = (max(closes[-20:]) - min(closes[-20:])) / min(closes[-20:]) * 100
 
-        # RSI calculation (14-period)
         deltas = [closes[i] - closes[i - 1] for i in range(1, len(closes))]
         gains = [d for d in deltas[-14:] if d > 0]
         losses = [abs(d) for d in deltas[-14:] if d < 0]
