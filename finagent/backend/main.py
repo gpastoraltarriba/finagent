@@ -39,6 +39,8 @@ def get_stock_data(ticker: str) -> dict:
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker.upper()}?interval=1d&range=1mo"
         resp = session.get(url, timeout=15)
         data = resp.json()
+        print(f"Yahoo response keys: {list(data.keys())}", flush=True)
+        print(f"Yahoo status: {data.get('chart', {}).get('error')}", flush=True)
         
         result = data["chart"]["result"][0]
         meta = result["meta"]
