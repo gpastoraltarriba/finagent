@@ -33,8 +33,8 @@ GROQ_MODEL = "llama-3.3-70b-versatile"
 def get_stock_data(ticker: str) -> dict:
     """Fetch real-time stock data from Yahoo Finance."""
     try:
-        session = requests.Session()
-        session.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'})
+        from curl_cffi import requests as curl_requests
+        session = curl_requests.Session(impersonate="chrome")
         stock = yf.Ticker(ticker.upper(), session=session)
         info = stock.info
         hist = stock.history(period="1mo", interval="1d")
