@@ -12,6 +12,8 @@ export interface StockData {
   change_pct: number
   market_cap: number
   pe_ratio: number
+  '52w_high': number
+  '52w_low': number
   sector: string
   currency: string
   price_history: { date: string; close: number; volume: number; high: number; low: number }[]
